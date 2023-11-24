@@ -29,44 +29,34 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.jrod7938.textchangeapp.navigation
+package com.jrod7938.textchangeapp.model
 
-/**
- * Enum class to represent the different screens of the app
- *
- * @constructor Creates an enum class to represent the different screens of the app
- */
-enum class AppScreens {
-    SplashScreen,
-    LoginScreen,
-    AccountScreen,
-    HomeScreen,
-    SearchScreen,
-    BookInfoScreen,
-    SavedBooksScreen,
-    ConversationsScreen,
-    ChatRoomScreen;
+import android.service.autofill.DateTransformation
+import android.text.style.TtsSpan.DateBuilder
+import android.util.Log
+import com.google.firebase.Timestamp
+import com.google.firebase.firestore.DocumentSnapshot
+import okhttp3.internal.http.toHttpDateOrNull
+import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.util.Date
+import java.util.Locale
 
+class Message(
+    val messageText: String,
+    val senderId: String,
+    val recipientId: String,
+    val timeStamp: Date,
+){
     companion object {
-        /**
-         * Get the screen from the route
-         *
-         * @param route route to get the screen from
-         *
-         * @return AppScreens
-         */
-        fun fromRoute(route: String): AppScreens = when (route?.substringBefore("/")) {
-            SplashScreen.name -> SplashScreen
-            LoginScreen.name -> LoginScreen
-            AccountScreen.name -> AccountScreen
-            HomeScreen.name -> HomeScreen
-            SearchScreen.name -> SearchScreen
-            BookInfoScreen.name -> BookInfoScreen
-            SavedBooksScreen.name -> SavedBooksScreen
-            ConversationsScreen.name -> ConversationsScreen
-            ChatRoomScreen.name -> ChatRoomScreen
-            null -> HomeScreen
-            else -> throw IllegalArgumentException("Route $route is not recognized.")
+        fun fromMap(map: HashMap<Any, Any>) : Message {
+            val timeStamp = map["timeStamp"] as Timestamp
+            return Message(
+                messageText = map["messageText"].toString(),
+                senderId = map["senderId"].toString(),
+                recipientId = map["recipientId"].toString(),
+                timeStamp = timeStamp.toDate()
+            )
         }
     }
 }

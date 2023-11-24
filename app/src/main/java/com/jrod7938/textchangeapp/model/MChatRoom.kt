@@ -29,44 +29,40 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.jrod7938.textchangeapp.navigation
+package com.jrod7938.textchangeapp.model
 
-/**
- * Enum class to represent the different screens of the app
- *
- * @constructor Creates an enum class to represent the different screens of the app
- */
-enum class AppScreens {
-    SplashScreen,
-    LoginScreen,
-    AccountScreen,
-    HomeScreen,
-    SearchScreen,
-    BookInfoScreen,
-    SavedBooksScreen,
-    ConversationsScreen,
-    ChatRoomScreen;
+import com.google.firebase.firestore.DocumentSnapshot
+
+data class MChatRoom(
+    var chatRoomId: String,
+    var chatRoomName: String,
+    var messages: List<Message>,
+    var buyerId: String,
+    var sellerId: String,
+    var bookId: String,
+) {
+    fun toMap(): MutableMap<String, Any> {
+        return mutableMapOf<String, Any>(
+            "chatRoomId" to this.chatRoomId,
+            "chatRoomName" to this.chatRoomName,
+            "messages" to this.messages,
+            "buyerId" to this.buyerId,
+            "sellerId" to this.sellerId,
+            "bookId" to this.bookId,
+        )
+    }
 
     companion object {
-        /**
-         * Get the screen from the route
-         *
-         * @param route route to get the screen from
-         *
-         * @return AppScreens
-         */
-        fun fromRoute(route: String): AppScreens = when (route?.substringBefore("/")) {
-            SplashScreen.name -> SplashScreen
-            LoginScreen.name -> LoginScreen
-            AccountScreen.name -> AccountScreen
-            HomeScreen.name -> HomeScreen
-            SearchScreen.name -> SearchScreen
-            BookInfoScreen.name -> BookInfoScreen
-            SavedBooksScreen.name -> SavedBooksScreen
-            ConversationsScreen.name -> ConversationsScreen
-            ChatRoomScreen.name -> ChatRoomScreen
-            null -> HomeScreen
-            else -> throw IllegalArgumentException("Route $route is not recognized.")
+        fun fromDocument(document: DocumentSnapshot): MChatRoom {
+            return MChatRoom(
+                chatRoomId = document.getString("chatRoomId") ?: "",
+                chatRoomName = document.getString("chatRoomName") ?: "",
+                messages = document.get("messages") as List<Message>,
+                buyerId = document.getString("buyerId") ?: "",
+                sellerId = document.getString("sellerId") ?: "",
+                bookId = document.getString("bookId") ?: "",
+
+            )
         }
     }
 }

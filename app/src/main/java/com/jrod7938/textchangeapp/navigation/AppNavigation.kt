@@ -50,6 +50,9 @@ import com.jrod7938.textchangeapp.components.BottomNavBar
 import com.jrod7938.textchangeapp.components.SellFAB
 import com.jrod7938.textchangeapp.components.TopNavigationBar
 import com.jrod7938.textchangeapp.screens.account.AccountScreen
+import com.jrod7938.textchangeapp.screens.chatroom.ChatRoomScreen
+import com.jrod7938.textchangeapp.screens.chatroom.ChatRoomViewModel
+import com.jrod7938.textchangeapp.screens.chatroom.ConversationsScreen
 import com.jrod7938.textchangeapp.screens.details.BookInfoScreen
 import com.jrod7938.textchangeapp.screens.home.HomeScreen
 import com.jrod7938.textchangeapp.screens.login.LoginScreen
@@ -169,6 +172,28 @@ fun AppNavigation() {
                         onDispose { }
                     }
                     AccountScreen(navController = navController)
+                }
+
+                composable(route = "${AppScreens.ChatRoomScreen.name}/{buyerId}-{sellerId}-{bookId}") {
+                    DisposableEffect(Unit) {
+                        showAppBars.value = true
+                        onDispose { }
+                    }
+                    val bookId = it.arguments?.getString("bookId")
+                    val buyerId = it.arguments?.getString("buyerId")
+                    val sellerId = it.arguments?.getString("sellerId")
+                    if (bookId != null && buyerId != null && sellerId != null) {
+                        ChatRoomScreen(navController = navController, bookId = bookId, senderId = buyerId, recipientId = sellerId)
+                    }
+                }
+                
+                composable(route = AppScreens.ConversationsScreen.name){
+                    DisposableEffect(Unit) {
+                        showAppBars.value = true
+                        onDispose { }
+                    }
+                    
+                    ConversationsScreen(navController = navController)
                 }
             }
         }

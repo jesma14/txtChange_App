@@ -33,6 +33,7 @@ package com.jrod7938.textchangeapp.components
 
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.Animatable
@@ -75,6 +76,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.BottomAppBar
 import androidx.compose.material.DropdownMenu
 import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.Icon
@@ -82,6 +84,7 @@ import androidx.compose.material.IconToggleButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
@@ -91,9 +94,11 @@ import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.HelpOutline
 import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material.icons.filled.Message
 import androidx.compose.material.icons.filled.ModeEditOutline
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.outlined.FavoriteBorder
@@ -116,11 +121,13 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.PlainTooltipBox
 import androidx.compose.material3.RichTooltipBox
 import androidx.compose.material3.RichTooltipState
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -183,14 +190,17 @@ import com.google.firebase.auth.FirebaseAuth
 import com.jrod7938.textchangeapp.R
 import com.jrod7938.textchangeapp.model.MBook
 import com.jrod7938.textchangeapp.model.MCategory
+import com.jrod7938.textchangeapp.model.MChatRoom
 import com.jrod7938.textchangeapp.model.MCondition
 import com.jrod7938.textchangeapp.model.MUser
+import com.jrod7938.textchangeapp.model.Message
 import com.jrod7938.textchangeapp.model.SearchType
 import com.jrod7938.textchangeapp.model.SelectionType
 import com.jrod7938.textchangeapp.model.ToggleButtonOption
 import com.jrod7938.textchangeapp.navigation.AppScreens
 import com.jrod7938.textchangeapp.navigation.BottomNavItem
 import com.jrod7938.textchangeapp.screens.account.AccountScreenViewModel
+import com.jrod7938.textchangeapp.screens.chatroom.ChatRoomViewModel
 import com.jrod7938.textchangeapp.screens.details.BookInfoScreenViewModel
 import com.jrod7938.textchangeapp.screens.home.HomeScreen
 import com.jrod7938.textchangeapp.screens.login.LoginScreenViewModel
@@ -200,6 +210,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 /**
  * This composable is the txtChange name plate. It displays the txtChange name
@@ -738,6 +751,13 @@ fun TopNavigationBar(
             )
         },
         actions = {
+            IconButton(onClick = { navController.navigate(AppScreens.ConversationsScreen.name)}){
+                Icon(
+                    imageVector = Icons.Default.Message,
+                    tint = MaterialTheme.colorScheme.primary,
+                    contentDescription = "Open Conversations"
+                )
+            }
             Box(
                 modifier = Modifier
                     .wrapContentSize(Alignment.TopEnd)
@@ -2802,4 +2822,140 @@ fun VerificationDialog(isVisible: Boolean) {
         )
     }
 
+}
+
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ChatRoomView(
+    currentUser: MUser,
+    senderId: String,
+    recipientId: String,
+    viewModel: ChatRoomViewModel,
+    chatRoom: MChatRoom,
+    chatRoomMessages: List<Message>
+){
+    var text by remember {mutableStateOf("")}
+    val currentDate by remember {mutableStateOf(Date())}
+
+    Column(
+        content = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text ="Title",
+                        color = MaterialTheme.colorScheme.background,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp
+                    )
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                ),
+                actions = {
+                    Text(text = "End Thread",
+                        color = MaterialTheme.colorScheme.background,
+                        fontSize = 14.sp,
+                    )
+                    IconButton(onClick = {}){
+                        Icon(
+                            imageVector = Icons.Default.Cancel,
+                            contentDescription = "Close Conversation",
+                            tint = MaterialTheme.colorScheme.secondaryContainer
+                        )
+                    }
+                },
+            )
+
+            LazyColumn (
+                modifier = Modifier
+                    .padding(15.dp)
+                    .fillMaxSize()
+                    .weight(1f)
+            ) {
+                chatRoomMessages.forEach { message ->
+                    item {
+                        val isFromMe = message.senderId == currentUser.userId
+                        Column(
+                            horizontalAlignment = if(isFromMe) Alignment.End else Alignment.Start,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 15.dp)
+                        ) {
+                            ChatBubble(isFromMe, message.messageText)
+                        }
+                    }
+                }
+            }
+
+            BottomAppBar(
+                backgroundColor = MaterialTheme.colorScheme.background,
+                elevation = 0.dp,
+                cutoutShape = CircleShape,
+                modifier = Modifier
+                    .height(70.dp)
+            ) {
+                OutlinedTextField(
+                    modifier = Modifier
+                        .fillMaxWidth(0.75f)
+                        .padding(start = 5.dp, bottom = 15.dp),
+                    shape = MaterialTheme.shapes.extraLarge,
+                    value = text,
+                    onValueChange = { text = it },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Message,
+                            tint = MaterialTheme.colorScheme.primary,
+                            contentDescription = "Message Icon",
+                        )
+                    },
+                    trailingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Send,
+                            tint = MaterialTheme.colorScheme.primary,
+                            contentDescription = "Send Message Icon",
+                            modifier = Modifier.clickable {
+                                viewModel.writeMessage(
+                                    chatRoomId = chatRoom.chatRoomId,
+                                    senderId = senderId,
+                                    recipientId = recipientId,
+                                    timeStamp = currentDate,
+                                    messageText = text,
+                                )
+                            }
+                        )
+                    }
+                )
+            }
+        }
+   )
+}
+
+
+@Composable
+fun ChatBubble(isFromMe: Boolean, content: String){
+    Box(
+        modifier = Modifier
+            .clip(
+                RoundedCornerShape(
+                    topStart = 48f,
+                    topEnd = 48f,
+                    bottomStart = if (isFromMe) 48f else 0f,
+                    bottomEnd = if (isFromMe) 0f else 48f
+                )
+            )
+            .background(
+                if (isFromMe) MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.secondaryContainer
+            )
+            .padding(16.dp)
+    ){
+        Text(
+            text = content,
+            softWrap = true,
+            maxLines = 10,
+            fontSize = 12.sp,
+            color = if(isFromMe) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSecondaryContainer
+        )
+    }
 }
